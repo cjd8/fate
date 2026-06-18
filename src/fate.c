@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include <locale.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -72,39 +73,82 @@ static int get_process_info(struct process_info *info)
         return 0;
 }
 
-static char* get_syscall()
+int get_dat_byte_index(char * file, int rand_inx)
 {
-        char line[32] = {0};
-        FILE *f;
-        
-        int inx = rand() % (414);
+        uint32_t ver, numstr, longlen, shortlen, flags;
+        uint32_t start_byte;
+        uint32_t *offsets;
+        char path[32] = {0};
+        char delim;
 
-        f = fopen(FATE_DATA_DIR "syscalls.txt", "r");
+        snprintf(path, sizeof(path), FATE_DATA_DIR "/%s", file);
+
+        FILE *f = fopen(path, "r");
         if (!f)
-                return NULL;
+                return -ENOENT;
 
-        for (int i = 0; i < inx; i++)
-                fgets(line, sizeof(line), f);
-        
+        fread(&ver, sizeof(uint32_t), 1, f);
+        fread(&numstr, sizeof(uint32_t), 1, f);
+        fread(&longlen, sizeof(uint32_t), 1, f);
+        fread(&shortlen, sizeof(uint32_t), 1, f);
+        fread(&flags, sizeof(uint32_t), 1, f);
+        fread(&delim, sizeof(char), 1, f);
+
+        ver = __builtin_bswap32(ver);
+        numstr = __builtin_bswap32(numstr);
+        longlen = __builtin_bswap32(longlen);
+        shortlen = __builtin_bswap32(shortlen);
+        flags = __builtin_bswap32(flags);
+
+        fseek(f, 24, SEEK_SET);
+
+        offsets = malloc((numstr + 1) * sizeof(uint32_t));
+        if (!offsets) {
+                fclose(f);
+                return -ENOMEM;
+        }
+
+        fread(offsets, sizeof(uint32_t), numstr + 1, f);
+
+        start_byte = __builtin_bswap32(offsets[rand_inx]);
+
+        free(offsets);
         fclose(f);
 
-        line[strcspn(line, "\n")] = '\0';
+        return start_byte;
+}
 
-        return strdup(line);
+int read_and_write_from_file(char *filename, int start_byte)
+{
+        char path[32] = {0};
+        char c;
+
+        snprintf(path, sizeof(path), FATE_DATA_DIR "/%s", filename);
+
+        FILE *f = fopen(path, "r");
+        if (!f)
+                return -ENOENT;
+
+        fseek(f, start_byte, SEEK_SET);
+
+        while ((c = fgetc(f)) != '@')
+                putchar(c);
+
+        fclose(f);
+        return 0;
 }
 
 static void print_result(struct process_info *info)
 {
-        char *lucky_call = get_syscall();
-        char *unlucky_call = get_syscall();
-
+        int byte_index;
         printf("\U0001F52E Ah, %s, a wise entity on this silicon plane.\n", info->name);
         printf("\U0001F52E Born in the epoch %lld.\n", info->start_time);
-        printf("\U0001F52E Lucky syscall: %s.\n", lucky_call);
-        printf("\U0001F52E Unlucky syscall: %s.\n", unlucky_call);
-
-        free(lucky_call);
-        free(unlucky_call);
+        printf("\U0001F52E Lucky syscall: ");
+        byte_index = get_dat_byte_index("syscalls.txt.dat", rand() % 414);
+        read_and_write_from_file("syscalls.txt", byte_index);
+        printf("\U0001F52E Unlucky syscall: ");
+        byte_index = get_dat_byte_index("syscalls.txt.dat", rand() % 414);
+        read_and_write_from_file("syscalls.txt", byte_index);
 }
 
 /*
