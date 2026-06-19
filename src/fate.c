@@ -181,7 +181,7 @@ void get_syscall()
 
 static void print_result(struct process_info *info)
 {
-        printf("\U0001F52E DAILY HOROSCOPE FOR: %s\n\U0001F52E ", info->name);
+        printf("\U0001F52E DAILY HOROSCOPE FOR: %s\n\U0001FA84 ", info->name);
         get_daily_fortune();
         printf("\U00002728 Lucky syscall: ");
         get_syscall();
