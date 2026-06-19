@@ -210,20 +210,18 @@ unsigned int get_fnv_hash(int pid, int year, int month, int day)
 
 int main(int argc, char **argv)
 {
+        struct process_info info = {0};
         unsigned int entropy_rand;
-        struct process_info info;
         struct tm *tm;
         time_t t;
-        int compat_flag = 0;
         int entropy_flag = 0;
         int options_inx = 0;
-        int pid_to_check;
         int option;
         int ret;
         
         setlocale(LC_ALL, "");
 
-        while ((option = getopt_long(argc, argv, "p:hv", flags, &options_inx)) != -1) {
+        while ((option = getopt_long(argc, argv, "p:hve", flags, &options_inx)) != -1) {
                 switch (option) {
                 case 'e':
                         entropy_flag = 1;
@@ -233,10 +231,6 @@ int main(int argc, char **argv)
                         return 0;
                 case 'p':
                         info.pid = atoi(optarg);
-                        break;
-                case 'c':
-                        compat_flag = 1;
-                        pid_to_check = atoi(optarg);
                         break;
                 case 'h':
                 default:
@@ -248,7 +242,7 @@ int main(int argc, char **argv)
         if (optind < argc)
                 info.pid = atoi(argv[optind]);
         
-        if (argc == 1)
+        if (info.pid == 0)
                 info.pid = getppid();
 
         ret = get_process_info(&info);
@@ -263,7 +257,7 @@ int main(int argc, char **argv)
         if (!entropy_flag) {
                 srand(get_fnv_hash(info.pid, tm->tm_year, tm->tm_mon, tm->tm_mday));
         } else {
-                getentropy(&entropy_rand, sizeof(entropy_flag));
+                getentropy(&entropy_rand, sizeof(entropy_rand));
                 srand(get_fnv_hash(info.pid, tm->tm_year, tm->tm_mon, tm->tm_mday)
                       + entropy_rand);
         }
