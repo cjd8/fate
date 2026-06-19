@@ -55,6 +55,7 @@ struct option flags[] = {
         { "version", no_argument, 0, 'v' },
         { "help", no_argument, 0, 'h' },
         { "predict", required_argument, 0, 'p' },
+        { "entropy", no_argument, 0, 'e' },
         { 0, 0, 0, 0 }
 };
 
@@ -93,7 +94,7 @@ int get_rand_dat_byte_index(const char * file)
         uint32_t start_byte;
         uint32_t *offsets;
         int rand_inx;
-        char path[32] = {0};
+        char path[64] = {0};
         char delim;
 
         snprintf(path, sizeof(path), FATE_DATA_DIR "/%s", file);
@@ -136,7 +137,7 @@ int get_rand_dat_byte_index(const char * file)
 
 int read_and_print_from_file(const char *filename, int start_byte)
 {
-        char path[32] = {0};
+        char path[64] = {0};
         char c;
 
         snprintf(path, sizeof(path), FATE_DATA_DIR "/%s", filename);
@@ -160,7 +161,7 @@ void get_daily_fortune()
 
        for (int i = 0; i < 4; i++) {
                if (i == 3)
-                       printf("\n\U0001F52E ");
+                       printf("\n\U0001FA84 ");
 
                byte_inx = get_rand_dat_byte_index(filenames_dat[i]);
                read_and_print_from_file(filenames[i], byte_inx);
@@ -182,9 +183,9 @@ static void print_result(struct process_info *info)
 {
         printf("\U0001F52E DAILY HOROSCOPE FOR: %s\n\U0001F52E ", info->name);
         get_daily_fortune();
-        printf("\U0001F52E Lucky syscall: ");
+        printf("\U00002728 Lucky syscall: ");
         get_syscall();
-        printf("\n\U0001F52E Unlucky syscall: ");
+        printf("\n\U00002728 Unlucky syscall: ");
         get_syscall();
         putchar('\n');
 }
@@ -210,9 +211,11 @@ unsigned int get_fnv_hash(int pid, int year, int month, int day)
 
 int main(int argc, char **argv)
 {
+        unsigned int entropy_rand;
         struct process_info info;
         struct tm *tm;
         time_t t;
+        int entropy_flag = 0;
         int options_inx = 0;
         int option;
         int ret;
@@ -221,6 +224,9 @@ int main(int argc, char **argv)
 
         while ((option = getopt_long(argc, argv, "p:hv", flags, &options_inx)) != -1) {
                 switch (option) {
+                case 'e':
+                        entropy_flag = 1;
+                        break;
                 case 'v':
                         printf("fate " FATE_VERSION "\n");
                         return 0;
@@ -233,7 +239,7 @@ int main(int argc, char **argv)
                         return 0;
                 }
         }
-        
+
         if (optind < argc)
                 info.pid = atoi(argv[optind]);
 
@@ -246,7 +252,13 @@ int main(int argc, char **argv)
         t = time(NULL);
         tm = localtime(&t);
 
-        srand(get_fnv_hash(info.pid, tm->tm_year, tm->tm_mon, tm->tm_mday)); 
+        if (!entropy_flag) {
+                srand(get_fnv_hash(info.pid, tm->tm_year, tm->tm_mon, tm->tm_mday));
+        } else {
+                getentropy(&entropy_rand, sizeof(entropy_flag));
+                srand(get_fnv_hash(info.pid, tm->tm_year, tm->tm_mon, tm->tm_mday)
+                      + entropy_rand);
+        }
 
         print_result(&info);
 
