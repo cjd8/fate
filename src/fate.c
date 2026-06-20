@@ -134,10 +134,10 @@ int get_rand_dat_byte_index(const char * file)
         return start_byte;
 }
 
-int read_and_print_from_file(const char *filename, int start_byte)
+int read_and_print_from_file(const char *filename, int start_byte, int terminator)
 {
         char path[64] = {0};
-        char c;
+        int c;
 
         snprintf(path, sizeof(path), FATE_DATA_DIR "/%s", filename);
 
@@ -147,7 +147,7 @@ int read_and_print_from_file(const char *filename, int start_byte)
 
         fseek(f, start_byte, SEEK_SET);
 
-        while ((c = fgetc(f)) != '\n')
+        while ((c = fgetc(f)) != terminator && c != EOF)
                 putchar(c);
 
         fclose(f);
@@ -163,7 +163,7 @@ void get_daily_fortune()
                        printf("\n\U0001FA84 ");
 
                byte_inx = get_rand_dat_byte_index(filenames_dat[i]);
-               read_and_print_from_file(filenames[i], byte_inx);
+               read_and_print_from_file(filenames[i], byte_inx, '\n');
                putchar(' ');
        }
 
@@ -175,7 +175,16 @@ void get_syscall()
         int byte_inx;
 
         byte_inx = get_rand_dat_byte_index("syscalls.txt.dat");
-        read_and_print_from_file("syscalls.txt", byte_inx);
+        read_and_print_from_file("syscalls.txt", byte_inx, '\n');
+}
+
+
+void print_daily_tarot()
+{
+        char card_filename[32];
+        snprintf(card_filename, sizeof(card_filename), "%d.txt", rand() % 22);
+        putchar('\n');
+        read_and_print_from_file(card_filename, 0, EOF);
 }
 
 static void print_fortune(struct process_info *info)
@@ -186,6 +195,8 @@ static void print_fortune(struct process_info *info)
         get_syscall();
         printf("\n\U00002728 Unlucky syscall: ");
         get_syscall();
+        printf("\n\U0001f0cf Associated tarot card: ");
+        print_daily_tarot();
         putchar('\n');
 }
 
