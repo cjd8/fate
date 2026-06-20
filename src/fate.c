@@ -23,6 +23,8 @@
 #define FATE_VERSION "err"
 #endif
 
+#define FATE_TAROT_CARDS_NUM 22
+
 #define FNV_PRIME 16777619
 #define FNV_OFFSET_BASIS 2166136261u
 
@@ -182,7 +184,7 @@ void get_syscall()
 void print_daily_tarot()
 {
         char card_filename[32];
-        snprintf(card_filename, sizeof(card_filename), "%d.txt", rand() % 22);
+        snprintf(card_filename, sizeof(card_filename), "%d.txt", rand() % FATE_TAROT_CARDS_NUM);
         putchar('\n');
         read_and_print_from_file(card_filename, 0, EOF);
 }
