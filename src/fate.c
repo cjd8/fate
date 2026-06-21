@@ -186,7 +186,6 @@ void print_daily_tarot()
 {
         char card_filename[32];
         snprintf(card_filename, sizeof(card_filename), "%d.txt", rand() % FATE_TAROT_CARDS_NUM);
-        putchar('\n');
         read_and_print_from_file(card_filename, 0, EOF);
 }
 
@@ -198,9 +197,8 @@ static void print_fortune(struct process_info *info)
         get_syscall();
         printf("\n\U00002728 Unlucky syscall: ");
         get_syscall();
-        printf("\n\U0001f0cf Associated tarot card: ");
+        printf("\n\U0001f0cf Associated tarot card:\n");
         print_daily_tarot();
-        putchar('\n');
 }
 
 /*
