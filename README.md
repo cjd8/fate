@@ -6,10 +6,28 @@ PIDs.
 ## Example output
 ```bash
 🔮 DAILY HOROSCOPE FOR: (bash)
-🪄 A forgotten zombie child is quietly auditing the deeply nested recursive stacks.
-🪄 Do not attempt to call SIGTERM today.
-✨ Lucky syscall: fallocate()
-✨ Unlucky syscall: setuid32()
+🪄 A detached background thread has cast a deep shadow over your unhandled signal masks. 
+🪄 This is a time for graceful degradation. Call exit(0). 
+✨ Lucky syscall: readdir()
+✨ Unlucky syscall: lgetxattr()
+🃏 Associated tarot card:
+.-----------------------.
+| XVII.                 |
+|                       |
+|           .           |
+|       .  \|/  .       |
+|         --*--         |
+|       .  /|\  .       |
+|           '           |
+|           O           |
+|         \_|_/         |
+|        U  |  U        |
+|       | ~/ \~ |~~~    |
+|       "       "~~~    |
+|                       |
+|                       |
+|       THE STAR        |
+'-----------------------'
 ```
 
 ## What and especially why?
@@ -17,9 +35,14 @@ PIDs.
 This program outputs a process' "horoscope" based on the supplied PID in a
 horoscope-like fashion, as a homage to the Unix command `fortune`,
 originally released in 1979. When entering a PID, the user will get a
-daily OS-related fortune, along with other information. This horoscope is
-generated using a seed made using the Fowler-No-Voll hash function, where
-the input is the PID and today's timestamp.
+daily OS-related fortune, along with a daily tarot card (special thanks to @eidamc!)
+and other information. This horoscope is generated using a seed made using the
+Fowler-No-Voll hash function, where the input is the PID and today's timestamp.
+
+## Prerequisites
+
+- CMake (min. version 3.15)
+- Yes, that is all
 
 ## Installation
 
@@ -43,6 +66,7 @@ Additionally, there are several flags to alter the behaviour of `fate`.
 | -e  | --entropy  | Gets a random seed to generate a random value each time.  |
 | -p  | --predict <pid_value> | Get horoscope of PID. Note, this can be also achieved by just entering the PID without this flag.  |
 | -v  | --version  | Get program version |
+| -t  | --tarot | Only prints daily tarot |
 | -h  | --help  | Get program usage  |
 
 ## DAT and text files
