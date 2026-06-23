@@ -1,4 +1,5 @@
 # Fate 🔮
+[![ubuntu-latest](https://github.com/cjd8/fate/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/cjd8/fate/actions/workflows/c-cpp.yml)
 
 A joke program providing alternative, spiritually (in)accurate diagnostics for Linux
 PIDs.
