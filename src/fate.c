@@ -8,6 +8,7 @@
 
 #include <errno.h>
 #include <getopt.h>
+#include <limits.h>
 #include <locale.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -96,7 +97,7 @@ int get_rand_dat_byte_index(const char * file)
         uint32_t start_byte;
         uint32_t *offsets;
         int rand_inx;
-        char path[64] = {0};
+        char path[PATH_MAX] = {0};
         char delim;
 
         snprintf(path, sizeof(path), FATE_DATA_DIR "/%s", file);
@@ -139,7 +140,7 @@ int get_rand_dat_byte_index(const char * file)
 
 int read_and_print_from_file(const char *filename, int start_byte, int terminator)
 {
-        char path[64] = {0};
+        char path[PATH_MAX] = {0};
         int c;
 
         snprintf(path, sizeof(path), FATE_DATA_DIR "/%s", filename);
