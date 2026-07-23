@@ -60,6 +60,7 @@ struct option flags[] = {
         { "predict", required_argument, 0, 'p' },
         { "entropy", no_argument, 0, 'e' },
         { "tarot", no_argument, 0, 't' },
+        { "relationship", no_argument, 0, 'r' },
         { 0, 0, 0, 0 }
 };
 
@@ -330,14 +331,17 @@ int main(int argc, char **argv)
         struct tm *tm;
         time_t t;
         int tarot_flag = 0;
+        int relationship_flag = 0;
         int entropy_flag = 0;
         int options_inx = 0;
         int option;
         int ret;
+
+        int pid1 = 0, pid2 = 0;
         
         setlocale(LC_ALL, "");
 
-        while ((option = getopt_long(argc, argv, "p:hvet", flags, &options_inx)) != -1) {
+        while ((option = getopt_long(argc, argv, "p:hvetr", flags, &options_inx)) != -1) {
                 switch (option) {
                 case 'e':
                         entropy_flag = 1;
@@ -351,6 +355,9 @@ int main(int argc, char **argv)
                 case 't':
                         tarot_flag = 1;
                         break;
+                case 'r':
+                        relationship_flag = 1;
+                        break;
                 case 'h':
                 default:
                         printf("Usage: fate [-hvp] [PID_VALUE]\n");
@@ -358,20 +365,45 @@ int main(int argc, char **argv)
                 }
         }
 
-        if (optind < argc)
-                info.pid = atoi(argv[optind]);
-        
-        if (info.pid == 0)
-                info.pid = getppid();
+        if (relationship_flag) {
+                if (optind + 1 < argc) {
+                        pid1 = atoi(argv[optind]);
+                        pid2 = atoi(argv[optind+1]);
+                } else {
+                        printf("Usage for relationship: fate -r <PID1> <PID2>\n");
+                        return 1;
+                }
+        } else {
+                if (optind < argc)
+                        info.pid = atoi(argv[optind]);
 
-        ret = get_process_info(&info);
-        if (ret) {
-                puts("\U0001F52E The stars haven't aligned, try again next time...");
-                return ret;
+                if (info.pid == 0)
+                        info.pid = getppid();
+        }
+
+        if (!relationship_flag) {
+                ret = get_process_info(&info);
+                if (ret) {
+                        puts("\U0001F52E The stars haven't aligned, try again next time...");
+                        return ret;
+                }
         }
        
         t = time(NULL);
         tm = localtime(&t);
+
+        if (relationship_flag) {
+                const unsigned int hash1 = get_fnv_hash(pid1, tm->tm_year, tm->tm_mon, tm->tm_mday);
+                const unsigned int hash2 = get_fnv_hash(pid2, tm->tm_year, tm->tm_mon, tm->tm_mday);
+
+                const unsigned int product = hash_couple_to_scalar_product(hash1, hash2);
+
+                printf("\U0001F49E SPIRITUAL RELATIONSHIP FOR PIDs %d AND %d:\n", pid1, pid2);
+                print_relationship_advice(product);
+                printf("\n");
+
+                return 0;
+        }
 
         if (!entropy_flag) {
                 srand(get_fnv_hash(info.pid, tm->tm_year, tm->tm_mon, tm->tm_mday));
