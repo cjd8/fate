@@ -296,7 +296,7 @@ unsigned int* get_standard_tensor()
         return tensor;
 }
 
-unsigned int hash_couple_to_scalar_product(unsigned const int hash1, unsigned const int hash2)
+int hash_couple_to_scalar_product(unsigned const int hash1, unsigned const int hash2)
 {
         const unsigned int normalised_hash1 = get_normalised_hash(hash1);
         const unsigned int normalised_hash2 = get_normalised_hash(hash2);
@@ -304,16 +304,24 @@ unsigned int hash_couple_to_scalar_product(unsigned const int hash1, unsigned co
         unsigned int* vector2 = normalised_hash_to_vector(normalised_hash2);
         unsigned int* tensor = get_standard_tensor();
 
-        unsigned int result = abstract_scalar_product(vector1, vector2, tensor);
+        const unsigned int result = abstract_scalar_product(vector1, vector2, tensor);
 
         free(vector1);
         free(vector2);
         free(tensor);
 
-        return result;
+        const unsigned int hamming_weight = __builtin_popcount(normalised_hash1 ^ normalised_hash2);
+        if (hamming_weight != 0) {
+                if (hamming_weight % 2 != 0) {
+                        return (int)result * (-1);
+                }
+                return (int)result;
+        }
+
+        return 1;
 }
 
-void print_relationship_advice(unsigned int const product)
+void print_relationship_advice(int const product)
 {
         switch (product) {
                 case 1:
