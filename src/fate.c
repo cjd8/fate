@@ -252,12 +252,6 @@ unsigned int get_normalised_hash(const unsigned int hash)
 
 unsigned int* normalised_hash_to_vector(unsigned int hash)
 {
-        if (hash == 0) {
-                unsigned int* arr = malloc(sizeof(unsigned int));
-                arr[0] = 0;
-                return arr;
-        }
-
         unsigned int* arr = malloc(NORMALISATION_DIGITS * sizeof(unsigned int));
         if (arr == NULL) {
                 return nullptr;
