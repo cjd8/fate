@@ -208,7 +208,7 @@ static void print_fortune(struct process_info *info)
  */
 unsigned int get_fnv_hash(int pid, int year, int month, int day)
 {
-        int hash = FNV_OFFSET_BASIS;
+        unsigned int hash = FNV_OFFSET_BASIS;
         char pid_timestamp[64];
 
         snprintf(pid_timestamp, sizeof(pid_timestamp), "%d%d%d%d", pid, year, month, day);
