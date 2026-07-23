@@ -300,9 +300,17 @@ unsigned int hash_couple_to_scalar_product(unsigned const int hash1, unsigned co
 {
         const unsigned int normalised_hash1 = get_normalised_hash(hash1);
         const unsigned int normalised_hash2 = get_normalised_hash(hash2);
-        const unsigned int* vector1 = normalised_hash_to_vector(normalised_hash1);
-        const unsigned int* vector2 = normalised_hash_to_vector(normalised_hash2);
-        return abstract_scalar_product(vector1, vector2, get_standard_tensor());
+        unsigned int* vector1 = normalised_hash_to_vector(normalised_hash1);
+        unsigned int* vector2 = normalised_hash_to_vector(normalised_hash2);
+        unsigned int* tensor = get_standard_tensor();
+
+        unsigned int result = abstract_scalar_product(vector1, vector2, tensor);
+
+        free(vector1);
+        free(vector2);
+        free(tensor);
+
+        return result;
 }
 
 void print_relationship_advice(unsigned int const product)
