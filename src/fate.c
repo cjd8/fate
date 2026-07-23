@@ -317,20 +317,22 @@ int hash_couple_to_scalar_product(unsigned const int hash1, unsigned const int h
 
 void print_relationship_advice(int const product)
 {
-        switch (product) {
-                case 1:
-                        printf("Wow, these processes are made for each other! Great future lies ahead of their magical bond.");
-                        break;
-                case 0:
-                        printf("These processes are very different, yet somehow they complement each other. Their synergy is interesting.");
-                        break;
-                case -1:
-                        //this cannot happen right now because of unsigned values, decide how to randomise later
-                        printf("STOP RIGHT NOW! THESE PROCESSES ARE ABSOLUTELY UNPAIRABLE, SIGKILL RECOMMENDED ASAP!");
-                        break;
-                default:
-                        printf("Hmmm, these processes are not so distant, their future is unclear though, try again on the next lunar cycle.");
-                        break;
+        if (product == 1) {
+                printf("Wow, these processes are made for each other! Great future lies ahead of their magical bond.");
+        } else if (product == 0) {
+                printf("These processes are very different, yet somehow they complement each other. Their synergy is interesting.");
+        } else if (product > 1 && product < 50) {
+                printf("A fragile connection. They exist in the same space, but their frequencies barely touch.");
+        } else if (product >= 50 && product < 200) {
+                printf("A strong and healthy resonance. Their energies flow in harmony.");
+        } else if (product >= 200) {
+                printf("Absolute cosmic synchrony! The fabric of the system bends around their unified execution.");
+        } else if (product < 0 && product >= -50) {
+                printf("A mild disturbance in their aura. Expect occasional friction in their shared resources.");
+        } else if (product < -50 && product >= -200) {
+                printf("Dark energies entangle them. A hostile alignment that breeds race conditions and sorrow.");
+        } else if (product < -200) {
+                printf("STOP RIGHT NOW! THESE PROCESSES ARE ABSOLUTELY UNPAIRABLE, SIGKILL RECOMMENDED ASAP!");
         }
 }
 
