@@ -408,7 +408,7 @@ int main(int argc, char **argv)
                 const unsigned int hash1 = get_fnv_hash(pid1, tm->tm_year, tm->tm_mon, tm->tm_mday);
                 const unsigned int hash2 = get_fnv_hash(pid2, tm->tm_year, tm->tm_mon, tm->tm_mday);
 
-                const unsigned int product = hash_couple_to_scalar_product(hash1, hash2);
+                const int product = hash_couple_to_scalar_product(hash1, hash2);
 
                 printf("\U0001F49E SPIRITUAL RELATIONSHIP FOR PIDs %d AND %d:\n", pid1, pid2);
                 print_relationship_advice(product);
