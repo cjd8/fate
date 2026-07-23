@@ -6,6 +6,7 @@
  * Copyright (c) 2026 Joshua Crofts <joshua.crofts1@gmail.com>
  */
 
+#include <endian.h>
 #include <errno.h>
 #include <getopt.h>
 #include <locale.h>
@@ -115,11 +116,11 @@ int get_rand_dat_byte_index(const char * file)
         fread(&flags, sizeof(uint32_t), 1, f);
         fread(&delim, sizeof(char), 1, f);
 
-        ver = __builtin_bswap32(ver);
-        numstr = __builtin_bswap32(numstr);
-        longlen = __builtin_bswap32(longlen);
-        shortlen = __builtin_bswap32(shortlen);
-        flags = __builtin_bswap32(flags);
+        ver = be32toh(ver);
+        numstr = be32toh(numstr);
+        longlen = be32toh(longlen);
+        shortlen = be32toh(shortlen);
+        flags = be32toh(flags);
 
         fseek(f, 24, SEEK_SET);
 
@@ -132,7 +133,7 @@ int get_rand_dat_byte_index(const char * file)
         fread(offsets, sizeof(uint32_t), numstr + 1, f);
 
         rand_inx = rand() % numstr;
-        start_byte = __builtin_bswap32(offsets[rand_inx]);
+        start_byte = be32toh(offsets[rand_inx]);
 
         free(offsets);
         fclose(f);
