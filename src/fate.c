@@ -254,7 +254,7 @@ unsigned int* normalised_hash_to_vector(unsigned int hash)
 {
         unsigned int* arr = malloc(NORMALISATION_DIGITS * sizeof(unsigned int));
         if (arr == NULL) {
-                return nullptr;
+                return NULL;
         }
 
         for (int i = NORMALISATION_DIGITS - 1; i >= 0; i--) {
@@ -281,7 +281,7 @@ unsigned int* get_standard_tensor()
         unsigned int* tensor = calloc(NORMALISATION_DIGITS * NORMALISATION_DIGITS, sizeof(unsigned int));
 
         if (tensor == NULL) {
-                return nullptr;
+                return NULL;
         }
         for (unsigned int i = 0; i < NORMALISATION_DIGITS; i++) {
                 tensor[i * NORMALISATION_DIGITS + i] = 1;
