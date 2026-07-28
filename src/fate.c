@@ -6,8 +6,10 @@
  * Copyright (c) 2026 Joshua Crofts <joshua.crofts1@gmail.com>
  */
 
+#include <endian.h>
 #include <errno.h>
 #include <getopt.h>
+#include <limits.h>
 #include <locale.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -99,7 +101,7 @@ int get_rand_dat_byte_index(const char * file)
         uint32_t start_byte;
         uint32_t *offsets;
         int rand_inx;
-        char path[64] = {0};
+        char path[PATH_MAX] = {0};
         char delim;
 
         snprintf(path, sizeof(path), FATE_DATA_DIR "/%s", file);
@@ -115,11 +117,11 @@ int get_rand_dat_byte_index(const char * file)
         fread(&flags, sizeof(uint32_t), 1, f);
         fread(&delim, sizeof(char), 1, f);
 
-        ver = __builtin_bswap32(ver);
-        numstr = __builtin_bswap32(numstr);
-        longlen = __builtin_bswap32(longlen);
-        shortlen = __builtin_bswap32(shortlen);
-        flags = __builtin_bswap32(flags);
+        ver = be32toh(ver);
+        numstr = be32toh(numstr);
+        longlen = be32toh(longlen);
+        shortlen = be32toh(shortlen);
+        flags = be32toh(flags);
 
         fseek(f, 24, SEEK_SET);
 
@@ -132,7 +134,7 @@ int get_rand_dat_byte_index(const char * file)
         fread(offsets, sizeof(uint32_t), numstr + 1, f);
 
         rand_inx = rand() % numstr;
-        start_byte = __builtin_bswap32(offsets[rand_inx]);
+        start_byte = be32toh(offsets[rand_inx]);
 
         free(offsets);
         fclose(f);
@@ -142,7 +144,7 @@ int get_rand_dat_byte_index(const char * file)
 
 int read_and_print_from_file(const char *filename, int start_byte, int terminator)
 {
-        char path[64] = {0};
+        char path[PATH_MAX] = {0};
         int c;
 
         snprintf(path, sizeof(path), FATE_DATA_DIR "/%s", filename);
@@ -209,7 +211,7 @@ static void print_fortune(struct process_info *info)
  */
 unsigned int get_fnv_hash(int pid, int year, int month, int day)
 {
-        int hash = FNV_OFFSET_BASIS;
+        unsigned int hash = FNV_OFFSET_BASIS;
         char pid_timestamp[64];
 
         snprintf(pid_timestamp, sizeof(pid_timestamp), "%d%d%d%d", pid, year, month, day);
