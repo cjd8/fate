@@ -25,6 +25,8 @@
 
 #define FATE_TAROT_CARDS_NUM 22
 
+#define NORMALISATION_DIGITS 6
+
 #define FNV_PRIME 16777619
 #define FNV_OFFSET_BASIS 2166136261u
 
@@ -58,6 +60,7 @@ struct option flags[] = {
         { "predict", required_argument, 0, 'p' },
         { "entropy", no_argument, 0, 'e' },
         { "tarot", no_argument, 0, 't' },
+        { "relationship", no_argument, 0, 'r' },
         { 0, 0, 0, 0 }
 };
 
@@ -219,6 +222,120 @@ unsigned int get_fnv_hash(int pid, int year, int month, int day)
         return hash;
 }
 
+unsigned int get_normalised_hash(const unsigned int hash)
+{
+        if (hash == 0) {
+                return 0;
+        }
+
+        //get # digits
+        unsigned int temp = hash;
+        int total_digits = 0;
+        while (temp > 0) {
+                total_digits++;
+                temp /= 10;
+        }
+
+        if (NORMALISATION_DIGITS >= total_digits) {
+                return hash;
+        }
+
+        //division to strip
+        const int digits_to_remove = total_digits - NORMALISATION_DIGITS;
+        unsigned int divisor = 1;
+        for (int i = 0; i < digits_to_remove; i++) {
+                divisor *= 10;
+        }
+
+        return hash / divisor;
+}
+
+unsigned int* normalised_hash_to_vector(unsigned int hash)
+{
+        unsigned int* arr = malloc(NORMALISATION_DIGITS * sizeof(unsigned int));
+        if (arr == NULL) {
+                return NULL;
+        }
+
+        for (int i = NORMALISATION_DIGITS - 1; i >= 0; i--) {
+                arr[i] = hash % 10;
+                hash /= 10;
+        }
+
+        return arr;
+}
+
+unsigned int abstract_scalar_product(unsigned const int* a, unsigned const int* b, unsigned const int* tensor)
+{
+        unsigned int result = 0;
+        for (int i = 0; i < NORMALISATION_DIGITS; i++) {
+                for (int j = 0; j < NORMALISATION_DIGITS; j++) {
+                        result += a[i] * tensor[i * NORMALISATION_DIGITS + j] * b[j];
+                }
+        }
+        return result;
+}
+
+unsigned int* get_standard_tensor()
+{
+        unsigned int* tensor = calloc(NORMALISATION_DIGITS * NORMALISATION_DIGITS, sizeof(unsigned int));
+
+        if (tensor == NULL) {
+                return NULL;
+        }
+        for (unsigned int i = 0; i < NORMALISATION_DIGITS; i++) {
+                tensor[i * NORMALISATION_DIGITS + i] = 1;
+        }
+
+        return tensor;
+}
+
+int hash_couple_to_scalar_product(unsigned const int hash1, unsigned const int hash2)
+{
+        const unsigned int normalised_hash1 = get_normalised_hash(hash1);
+        const unsigned int normalised_hash2 = get_normalised_hash(hash2);
+        unsigned int* vector1 = normalised_hash_to_vector(normalised_hash1);
+        unsigned int* vector2 = normalised_hash_to_vector(normalised_hash2);
+        unsigned int* tensor = get_standard_tensor();
+
+        const unsigned int result = abstract_scalar_product(vector1, vector2, tensor);
+
+        free(vector1);
+        free(vector2);
+        free(tensor);
+
+        const unsigned int hamming_weight = __builtin_popcount(normalised_hash1 ^ normalised_hash2);
+        if (hamming_weight != 0) {
+                if (hamming_weight % 2 != 0) {
+                        return (int)result * (-1);
+                }
+                return (int)result;
+        }
+
+        return 1;
+}
+
+void print_relationship_advice(int const product)
+{
+        if (product == 1) {
+                printf("Wow, these processes are made for each other! Great future lies ahead of their magical bond.");
+        } else if (product == 0) {
+                printf("These processes are very different, yet somehow they complement each other. Their synergy is interesting.");
+        } else if (product > 1 && product < 50) {
+                printf("A fragile connection. They exist in the same space, but their frequencies barely touch.");
+        } else if (product >= 50 && product < 200) {
+                printf("A strong and healthy resonance. Their energies flow in harmony.");
+        } else if (product >= 200) {
+                printf("Absolute cosmic synchrony! The fabric of the system bends around their unified execution.");
+        } else if (product < 0 && product >= -50) {
+                printf("A mild disturbance in their aura. Expect occasional friction in their shared resources.");
+        } else if (product < -50 && product >= -200) {
+                printf("Dark energies entangle them. A hostile alignment that breeds race conditions and sorrow.");
+        } else if (product < -200) {
+                printf("STOP RIGHT NOW! THESE PROCESSES ARE ABSOLUTELY UNPAIRABLE, SIGKILL RECOMMENDED ASAP!");
+        }
+}
+
 int main(int argc, char **argv)
 {
         struct process_info info = {0};
@@ -226,14 +343,17 @@ int main(int argc, char **argv)
         struct tm *tm;
         time_t t;
         int tarot_flag = 0;
+        int relationship_flag = 0;
         int entropy_flag = 0;
         int options_inx = 0;
         int option;
         int ret;
+
+        int pid1 = 0, pid2 = 0;
         
         setlocale(LC_ALL, "");
 
-        while ((option = getopt_long(argc, argv, "p:hvet", flags, &options_inx)) != -1) {
+        while ((option = getopt_long(argc, argv, "p:hvetr", flags, &options_inx)) != -1) {
                 switch (option) {
                 case 'e':
                         entropy_flag = 1;
@@ -247,6 +367,9 @@ int main(int argc, char **argv)
                 case 't':
                         tarot_flag = 1;
                         break;
+                case 'r':
+                        relationship_flag = 1;
+                        break;
                 case 'h':
                 default:
                         printf("Usage: fate [-hvp] [PID_VALUE]\n");
@@ -254,20 +377,45 @@ int main(int argc, char **argv)
                 }
         }
 
-        if (optind < argc)
-                info.pid = atoi(argv[optind]);
-        
-        if (info.pid == 0)
-                info.pid = getppid();
+        if (relationship_flag) {
+                if (optind + 1 < argc) {
+                        pid1 = atoi(argv[optind]);
+                        pid2 = atoi(argv[optind+1]);
+                } else {
+                        printf("Usage for relationship: fate -r <PID1> <PID2>\n");
+                        return 1;
+                }
+        } else {
+                if (optind < argc)
+                        info.pid = atoi(argv[optind]);
 
-        ret = get_process_info(&info);
-        if (ret) {
-                puts("\U0001F52E The stars haven't aligned, try again next time...");
-                return ret;
+                if (info.pid == 0)
+                        info.pid = getppid();
+        }
+
+        if (!relationship_flag) {
+                ret = get_process_info(&info);
+                if (ret) {
+                        puts("\U0001F52E The stars haven't aligned, try again next time...");
+                        return ret;
+                }
         }
        
         t = time(NULL);
         tm = localtime(&t);
+
+        if (relationship_flag) {
+                const unsigned int hash1 = get_fnv_hash(pid1, tm->tm_year, tm->tm_mon, tm->tm_mday);
+                const unsigned int hash2 = get_fnv_hash(pid2, tm->tm_year, tm->tm_mon, tm->tm_mday);
+
+                const int product = hash_couple_to_scalar_product(hash1, hash2);
+
+                printf("\U0001F49E SPIRITUAL RELATIONSHIP FOR PIDs %d AND %d:\n", pid1, pid2);
+                print_relationship_advice(product);
+                printf("\n");
+
+                return 0;
+        }
 
         if (!entropy_flag) {
                 srand(get_fnv_hash(info.pid, tm->tm_year, tm->tm_mon, tm->tm_mday));
